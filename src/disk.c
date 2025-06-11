@@ -1,6 +1,6 @@
 #include "../include/disk.h"
 
-static disk_io_t _disk_io = {
+static io_t _disk_io = {
     .read_sector  = NULL,
     .write_sector = NULL,
     .sector_size  = 512

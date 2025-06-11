@@ -3,7 +3,6 @@
 #include <fcntl.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdarg.h>
 #include "nifat32.h"
 
 typedef enum {
@@ -32,24 +31,12 @@ cmd_t _get_cmd(const char* input) {
 #define SECTOR_SIZE 512
 
 static int disk_fd = 0;
-static int _mock_sector_read_(sector_addr_t sa, sector_offset_t offset, buffer_t buffer, int buff_size) {
+int _mock_sector_read_(sector_addr_t sa, sector_offset_t offset, buffer_t buffer, int buff_size) {
     return pread(disk_fd, buffer, buff_size, sa * SECTOR_SIZE + offset) > 0;
 }
 
-static int _mock_sector_write_(sector_addr_t sa, sector_offset_t offset, const_buffer_t data, int data_size) {
+int _mock_sector_write_(sector_addr_t sa, sector_offset_t offset, const_buffer_t data, int data_size) {
     return pwrite(disk_fd, data, data_size, sa * SECTOR_SIZE + offset) > 0;
-}
-
-static int _mock_fprintf(const char* fmt, ...) {
-    va_list args;
-    va_start(args, fmt);
-    int result = vfprintf(stdout, fmt, args);
-    va_end(args);
-    return result;
-}
-
-static int _mock_vfprintf(const char* fmt, va_list args) {
-    return vfprintf(stdout, fmt, args);
 }
 
 int main(int argc, char* argv[]) {
@@ -57,12 +44,6 @@ int main(int argc, char* argv[]) {
     if (disk_fd < 0) {
         fprintf(stderr, "%s not found!\n", DISK_PATH);
         return EXIT_FAILURE;
-    }
-
-    if (!LOG_setup(_mock_fprintf, _mock_vfprintf)) {
-        fprintf(stderr, "LOG_setup() error!\n");
-        close(disk_fd);
-        return EXIT_FAILURE;        
     }
 
     if (!DSK_setup(_mock_sector_read_, _mock_sector_write_, SECTOR_SIZE)) {
